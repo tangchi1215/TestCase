@@ -1,18 +1,19 @@
 # %%
-import os
-import glob
-import pandas as pd
+# %%
 import datetime
+import glob
+import os
+
+import pandas as pd
 from docx import Document
+from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_ALIGN_VERTICAL
 
 
 # %%
-# 讀取Excel文件並進行初步處理
 def load_and_prepare_data(file_path):
     try:
         df = pd.read_excel(file_path, engine='openpyxl')
@@ -32,7 +33,7 @@ def load_and_prepare_data(file_path):
 
     cleaned_data['測試日期'] = formatted_date
     cleaned_data['測試\n結果'] = '通過'
-    base_name = file_path.split('.')[0]
+    base_name = os.path.basename(file_path.split('.')[0])
     cleaned_data['測試個案\n編號'] = [f"{base_name}-{i + 1:02}" for i in range(len(cleaned_data))]
     return cleaned_data.fillna('')
 
@@ -151,7 +152,6 @@ def user_select_file(files):
 
 
 # %%
-# 主流程
 def main():
     directory = input("請輸入測試案例.xlsx放的路徑: ")
     files = scan_xlsx_files(directory)
@@ -160,9 +160,9 @@ def main():
         selected_file = user_select_file(displayed_files)
         if selected_file:
             print(f"你要產的測試報告：{os.path.basename(selected_file)}")
-            path = selected_file.split('\\')[-1]
+            path = os.path.join(directory, os.path.basename(selected_file))
             cleaned_data = load_and_prepare_data(path)
-            doc = Document('../docs/project_doc.docx')
+            doc = Document()
             style = doc.styles['Normal']
             style.font.name = '標楷體'
             style.font.size = Pt(12)
@@ -170,7 +170,7 @@ def main():
             doc._body.clear_content()
 
             column_widths = (
-                Inches(0.8), Inches(0.44), Inches(1.962), Inches(1.24), Inches(0.2), Inches(0.3), Inches(0.2))
+                Inches(0.8), Inches(0.5), Inches(1.962), Inches(1.24), Inches(0.2), Inches(0.3), Inches(0.2))
             create_and_format_table(doc, cleaned_data, column_widths)
 
             output_path = (path).split('.')[0] + '.docx'

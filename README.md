@@ -23,11 +23,12 @@
    ```
 
 ## 使用方法
-1. 運行腳本：
+1. 使用template.xlsx撰寫你的測試案例，可改成你想要的檔名
+2. 運行腳本：
    ```bash
    python excel2word.py
    ```
-2. 按照終端中的提示操作。
+3. 按照終端中的提示操作。
 
 ## 打包成 EXE
 如果你想自己打包成 `.exe`，請遵循以下步驟：
@@ -39,3 +40,10 @@
    ```bash
    pyinstaller --onefile excel2word.py
    ```
+## 更新requirements.txt
+1. 使用pip freeze
+   ```bash
+   pip freeze > requirements.txt
+   ```
+
+   

@@ -117,13 +117,10 @@ def set_cell_border(cell, color='000000', size='4'):
         tcBorders.append(border)
     tcPr.append(tcBorders)
 
-
-# %%
 def scan_xlsx_files(directory):
     path_pattern = os.path.join(directory, '*.xlsx')
     files = glob.glob(path_pattern)
     return files
-
 
 def display_files(files):
     if not files:
@@ -136,8 +133,6 @@ def display_files(files):
 
     return files
 
-
-# %%
 def user_select_file(files):
     try:
         selection = int(input("請輸入文件編號（ex:1, 2 ...）: "))
@@ -150,8 +145,6 @@ def user_select_file(files):
 
     return None
 
-
-# %%
 def main():
     directory = input("請輸入測試案例.xlsx放的路徑: ")
     files = scan_xlsx_files(directory)
@@ -179,8 +172,5 @@ def main():
         else:
             print("你沒選 = =")
 
-
-# %%
-# 執行主程式
 if __name__ == '__main__':
     main()

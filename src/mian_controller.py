@@ -1,10 +1,10 @@
 import os
 
-from data_manager import DataManager
-from table_formatter import TableFormatter
-from file_scanner import FileScanner
-from document_manager import DocumentManager
-from user_interface import UserInterface
+from src.service.data_manager import DataManager
+from src.service.table_formatter import TableFormatter
+from src.service.file_scanner import FileScanner
+from src.service.document_manager import DocumentManager
+from src.service.user_interface import UserInterface
 from docx.shared import Inches
 class MainController:
     def run(self):

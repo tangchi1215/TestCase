@@ -67,7 +67,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def set_background_image(self):
         """ 設置窗口背景圖片 """
-        pixmap = QtGui.QPixmap(resource_path("../assets/img/cuteBg.jpg"))
+        pixmap = QtGui.QPixmap(resource_path("src/assets/img/cuteBg.jpg"))
         scaled_pixmap = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
         palette = self.palette()
         palette.setBrush(self.backgroundRole(), QtGui.QBrush(scaled_pixmap))

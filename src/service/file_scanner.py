@@ -1,6 +1,7 @@
 import glob
 import os
 
+
 class FileScanner:
     @staticmethod
     def scan_xlsx_files(directory):

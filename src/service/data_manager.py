@@ -2,6 +2,7 @@ import datetime
 import os
 import pandas as pd
 
+
 class DataManager:
     @staticmethod
     def load_and_prepare_data(file_path):

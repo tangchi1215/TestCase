@@ -4,6 +4,7 @@ from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
 
+
 class TableFormatter:
     @staticmethod
     def set_cell_font(cell, font_name='標楷體', font_size=Pt(10)):
@@ -50,7 +51,7 @@ class TableFormatter:
             border.set(qn('w:color'), color)
             tcBorders.append(border)
         tcPr.append(tcBorders)
-    
+
     @staticmethod
     def set_table_header(row, columns):
         for i, col_name in enumerate(columns):
@@ -72,7 +73,6 @@ class TableFormatter:
             TableFormatter.set_table_header(table.rows[0], data.columns)
             TableFormatter.add_table_data(table, row)
             doc.add_paragraph()  # 添加空行作為分隔
-
 
     @staticmethod
     def add_table_data(table, row_data):

@@ -43,3 +43,5 @@ whichcraft==0.6.1
 widgetsnbextension==4.0.10
 zope.event==5.0
 zope.interface==6.3
+
+PyQt6~=6.7.0

@@ -1,27 +1,12 @@
 import sys
-import os
-from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal
-from document_manager import DocumentManager
-from data_manager import DataManager
-from table_formatter import TableFormatter
+from PyQt6 import QtWidgets, QtGui
+from PyQt6.QtCore import Qt
+from service.document_manager import DocumentManager
+from service.data_manager import DataManager
+from service.table_formatter import TableFormatter
 from docx.shared import Inches
-
-def resource_path(relative_path):
-    """ 獲取資源的絕對路徑，適用於開發環境和打包後環境 """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
-
-class ClickableLabel(QtWidgets.QLabel):
-    clicked = pyqtSignal()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit()
-        super().mousePressEvent(event)
+from utils.resource_path import resource_path
+from ui.clickable_label import ClickableLabel
 
 class DraggableWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -82,7 +67,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def set_background_image(self):
         """ 設置窗口背景圖片 """
-        pixmap = QtGui.QPixmap(resource_path("./img/cuteBg.jpg"))
+        pixmap = QtGui.QPixmap(resource_path("../assets/img/cuteBg.jpg"))
         scaled_pixmap = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
         palette = self.palette()
         palette.setBrush(self.backgroundRole(), QtGui.QBrush(scaled_pixmap))

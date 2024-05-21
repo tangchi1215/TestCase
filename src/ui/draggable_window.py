@@ -1,19 +1,20 @@
 import sys
 import shutil
+
 from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtCore import Qt
-from service.document_manager import DocumentManager
-from service.data_manager import DataManager
-from service.table_formatter import TableFormatter
-from docx.shared import Inches
-from utils.resource_path import resource_path
+from PyQt6.QtCore import Qt,  QThreadPool
+from service.file_worker import FileWorker
+
 from ui.clickable_label import ClickableLabel
 from ui.file_status_widget import FileStatusWidget
 
+from utils.resource_path import resource_path
 
-def draggable_style_default():
+
+def draggable_style_default(widget):
     """ 返回 QLabel 的默認樣式表 """
-    return """
+    widget.setStyleSheet(
+        """
         QLabel {
             border: 2px dashed #aaa;
             border-radius: 10px;
@@ -22,11 +23,13 @@ def draggable_style_default():
             color: #777;
         }
     """
+    )
 
 
-def draggable_style_active():
+def draggable_style_active(widget):
     """ 返回 QLabel 的活動狀態樣式表 """
-    return """
+    widget.setStyleSheet(
+        """
         QLabel {
             border: 2px dashed #ffffff;
             border-radius: 10px;
@@ -35,11 +38,13 @@ def draggable_style_active():
             color: #ffffff;
         }
     """
+    )
 
 
-def file_status_list_style():
-    """ 返回 file status list 的樣式表 """
-    return """
+def file_status_list_style(widget):
+    """ 返回 QListWidget 的樣式表 """
+    widget.setStyleSheet(
+        """
         QListWidget {
             background-color: rgba(0, 0, 0, 0);;
             border-radius: 10px;
@@ -54,6 +59,7 @@ def file_status_list_style():
             color: white;
         }
     """
+    )
 
 
 class DraggableWindow(QtWidgets.QWidget):
@@ -65,14 +71,14 @@ class DraggableWindow(QtWidgets.QWidget):
         self.setGeometry(100, 100, 700, 400)
 
         # 設置圖標
-        # icon_path = resource_path("src/assets/img/cuteBg.jpg")
-        icon_path = "src/assets/img/cuteIcon.png"
+        icon_path = resource_path("src/assets/img/cuteIcon.png")
+        # icon_path = "src/assets/img/cuteIcon.png"
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # 創建可點擊的 QLabel
         self.label = ClickableLabel('Drag a file here', self)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setStyleSheet(draggable_style_default())
+        draggable_style_default(self.label)
         self.label.clicked.connect(self.open_file_dialog)
 
         # 創建一個按鈕
@@ -81,7 +87,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
         # 創建一個 QListWidget 顯示轉檔狀態
         self.file_status_list = QtWidgets.QListWidget()
-        self.file_status_list.setStyleSheet(file_status_list_style())
+        file_status_list_style(self.file_status_list)
 
         # 設置左側布局
         left_layout = QtWidgets.QVBoxLayout()
@@ -118,10 +124,18 @@ class DraggableWindow(QtWidgets.QWidget):
         self.set_background_image()
         self.show()
 
+        # 初始化 QThreadPool
+        self.thread_pool = QThreadPool()
+
+        # 初始化文件計數器和狀態列表
+        self.total_files = 0
+        self.completed_files = 0
+        self.failed_files = []
+
     def set_background_image(self):
         """ 設置窗口背景圖片 """
-        pixmap = QtGui.QPixmap("src/assets/img/cuteBg.jpg")
-        # pixmap = QtGui.QPixmap(resource_path("src/assets/img/cuteBg.jpg"))
+        # pixmap = QtGui.QPixmap("src/assets/img/cuteBg.jpg")
+        pixmap = QtGui.QPixmap(resource_path("src/assets/img/cuteBg.jpg"))
         scaled_pixmap = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                                       Qt.TransformationMode.SmoothTransformation)
         palette = self.palette()
@@ -142,7 +156,7 @@ class DraggableWindow(QtWidgets.QWidget):
         """ 當窗口大小改變時，重新設置背景圖片和 QLabel 大小 """
         self.set_background_image()
         self.overlay.setGeometry(self.rect())
-        self.label.setStyleSheet(draggable_style_default())  # 重新設置樣式表確保邊框顯示
+        draggable_style_default(self.label)  # 重新設置樣式表確保邊框顯示
         self.label.resize(self.size())
         super().resizeEvent(event)
 
@@ -150,15 +164,15 @@ class DraggableWindow(QtWidgets.QWidget):
         """ 當拖動項目進入窗口時檢查是否接受拖動 """
         if event.mimeData().hasUrls() and all(url.fileName().endswith('.xlsx') for url in event.mimeData().urls()):
             event.acceptProposedAction()
-            self.label.setStyleSheet(draggable_style_active())
+            draggable_style_active(self.label)
 
     def dragLeaveEvent(self, event):
         """ 當拖動項目離開窗口時恢復 QLabel 樣式 """
-        self.label.setStyleSheet(draggable_style_default())
+        draggable_style_default(self.label)
 
     def dropEvent(self, event):
         """ 當拖動項目放下時處理文件 """
-        self.label.setStyleSheet(draggable_style_default())
+        draggable_style_default(self.label)
         files = [url.toLocalFile() for url in event.mimeData().urls() if url.fileName().endswith('.xlsx')]
         if files:
             self.process_files(files)
@@ -173,6 +187,10 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def process_files(self, files):
         """ 處理拖動進來或選擇的文件 """
+        self.total_files = len(files)
+        self.completed_files = 0
+        self.failed_files = []
+
         for file_path in files:
             file_status_widget = FileStatusWidget(file_path)
             item = QtWidgets.QListWidgetItem()
@@ -181,34 +199,45 @@ class DraggableWindow(QtWidgets.QWidget):
             self.file_status_list.setItemWidget(item, file_status_widget)
             QtWidgets.QApplication.processEvents()  # 更新 UI
 
-            try:
-                # 加載和準備數據
-                cleaned_data = DataManager.load_and_prepare_data(file_path)
-                if cleaned_data is not None:
-                    # 創建文檔
-                    doc = DocumentManager.create_document()
-                    # 設置表格列寬
-                    column_widths = (
-                        Inches(0.8), Inches(0.5), Inches(1.962), Inches(1.24), Inches(0.2), Inches(0.3), Inches(0.2))
-                    # 創建並格式化表格
-                    TableFormatter.create_and_format_table(doc, cleaned_data, column_widths)
-                    # 保存文檔
-                    output_path = file_path.replace('.xlsx', '.docx')
-                    DocumentManager.save_document(doc, output_path)
-                    # 更新 QLabel 顯示生成的文件路徑
-                    file_status_widget.update_progress(100)
-                    self.label.setText(f"已生成: {output_path}")
-                else:
-                    file_status_widget.update_progress(0)
-                    item.setText(f"Failed to process {file_path}")
-            except Exception as e:
-                file_status_widget.update_progress(0)
-                item.setText(f"Error processing {file_path}: {e}")
+            # 創建並運行 FileWorker
+            worker = FileWorker(file_path)
+            worker.signals.progress.connect(file_status_widget.increment_progress)
+            worker.signals.finished.connect(self.on_file_finished)
+            worker.signals.error.connect(self.on_file_error)
+            self.thread_pool.start(worker)
+
+    def on_file_finished(self, file_path, output_path):
+        QtCore.QMetaObject.invokeMethod(self, "update_ui_on_finished", QtCore.Qt.ConnectionType.QueuedConnection,
+                                        QtCore.Q_ARG(str, file_path), QtCore.Q_ARG(str, output_path))
+
+    @QtCore.pyqtSlot(str, str)
+    def update_ui_on_finished(self, file_path, output_path):
+        self.completed_files += 1
+        self.check_all_files_completed()
+
+    def on_file_error(self, file_path, error_message):
+        """ 處理文件错误事件 """
+        QtWidgets.QMessageBox.critical(self, 'Error', f'處理 {file_path} 時出錯: {error_message}')
+        self.completed_files += 1
+        self.check_all_files_completed()
+
+    def check_all_files_completed(self):
+        """ 檢查是否所有文件都已完成處理 """
+        if self.completed_files == self.total_files:
+            QtCore.QTimer.singleShot(1000, self.show_completion_message)
+
+    def show_completion_message(self):
+        """ 顯示完成消息框 """
+        if not self.failed_files:
+            QtWidgets.QMessageBox.information(self, 'Success', '所有文件已成功處理完成！')
+        else:
+            QtWidgets.QMessageBox.warning(self, 'Partial Success',
+                                          '以下文件處理失敗:\n' + '\n'.join(self.failed_files))
 
     def on_button_click(self):
         """ 處理按鈕點擊事件，讓使用者選擇保存 template.xlsx 文件的位置 """
-        template_path = "src/assets/templates/template.xlsx"
-        # template_path = resource_path("src/assets/templates/template.xlsx")
+        # template_path = "src/assets/templates/template.xlsx"
+        template_path = resource_path("src/assets/templates/template.xlsx")
 
         # 打開文件保存對話框讓使用者選擇保存路徑
         save_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Template",

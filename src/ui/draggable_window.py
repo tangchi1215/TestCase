@@ -68,11 +68,13 @@ class DraggableWindow(QtWidgets.QWidget):
 
         # 設置窗口標題和大小
         self.setWindowTitle('測試報告產生器')
-        self.setGeometry(100, 100, 700, 400)
+        self.setGeometry(100, 100, 800, 500)
 
         # 設置圖標
-        icon_path = resource_path("src/assets/img/cuteIcon.png")
-        # icon_path = "src/assets/img/cuteIcon.png"
+        # resource path
+        # icon_path = resource_path("src/assets/img/cuteIcon.png")
+        icon_path = resource_path("D:\\TestCase\\src\\assets\\img\\cuteIcon.png")
+
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # 創建可點擊的 QLabel
@@ -85,16 +87,77 @@ class DraggableWindow(QtWidgets.QWidget):
         self.button = QtWidgets.QPushButton('Download Template', self)
         self.button.clicked.connect(self.on_button_click)
 
+        # 創建一個離開按鈕
+        self.exit_button = QtWidgets.QPushButton('Exit', self)
+        self.exit_button.clicked.connect(self.close_application)
+
         # 創建一個 QListWidget 顯示轉檔狀態
         self.file_status_list = QtWidgets.QListWidget()
         file_status_list_style(self.file_status_list)
 
+        # 創建自訂區域
+        custom_group_box = QtWidgets.QGroupBox("自訂選項")
+        custom_layout = QtWidgets.QFormLayout()
+
+        # 覆蓋已存在檔案選項
+        self.overwrite_yes_radio = QtWidgets.QRadioButton("是")
+        self.overwrite_no_radio = QtWidgets.QRadioButton("否")
+        self.overwrite_no_radio.setChecked(True)
+
+        # Print Result
+        self.overwrite_yes_radio.toggled.connect(self.printSelection)
+
+        overwrite_layout = QtWidgets.QHBoxLayout()
+        overwrite_layout.addWidget(self.overwrite_yes_radio)
+        overwrite_layout.addWidget(self.overwrite_no_radio)
+        overwrite_widget = QtWidgets.QWidget()
+        overwrite_widget.setLayout(overwrite_layout)
+        custom_layout.addRow(QtWidgets.QLabel("覆蓋已存在檔案:"), overwrite_widget)
+
+        # 測試編號前綴選項
+        # self.prefix_filename_radio = QtWidgets.QRadioButton("依檔名")
+        # self.prefix_filename_xlsx_radio = QtWidgets.QRadioButton("依文件內自訂")
+        # self.prefix_other_radio = QtWidgets.QRadioButton("其他")
+        # self.prefix_other_input = QtWidgets.QLineEdit()
+        # self.prefix_filename_radio.setChecked(True)
+        # self.prefix_other_input.setEnabled(False)
+        # self.prefix_other_radio.toggled.connect(self.prefix_other_input.setEnabled)
+        # prefix_layout = QtWidgets.QHBoxLayout()
+        # prefix_layout.addWidget(self.prefix_filename_radio)
+        # prefix_layout.addWidget(self.prefix_filename_xlsx_radio)
+        # prefix_layout.addWidget(self.prefix_other_radio)
+        # prefix_layout.addWidget(self.prefix_other_input)
+        # prefix_widget = QtWidgets.QWidget()
+        # prefix_widget.setLayout(prefix_layout)
+        # custom_layout.addRow(QtWidgets.QLabel("測試編號前綴:"), prefix_widget)
+
+        # 測試日期選項
+        # self.date_today_radio = QtWidgets.QRadioButton("今天")
+        # self.date_other_radio = QtWidgets.QRadioButton("其他")
+        # self.date_other_input = QtWidgets.QDateEdit()
+        # self.date_today_radio.setChecked(True)
+        # self.date_other_input.setEnabled(False)
+        # self.date_other_radio.toggled.connect(self.date_other_input.setEnabled)
+        # date_layout = QtWidgets.QHBoxLayout()
+        # date_layout.addWidget(self.date_today_radio)
+        # date_layout.addWidget(self.date_other_radio)
+        # date_layout.addWidget(self.date_other_input)
+        # date_widget = QtWidgets.QWidget()
+        # date_widget.setLayout(date_layout)
+        # custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
+        #
+        custom_group_box.setLayout(custom_layout)
+
         # 設置左側布局
         left_layout = QtWidgets.QVBoxLayout()
         left_layout.addWidget(self.label)
+        left_layout.addWidget(custom_group_box)
         left_layout.addWidget(self.button)
+        left_layout.addWidget(self.exit_button)  # 添加離開按鈕
         left_layout.setStretch(0, 1)  # 讓 QLabel 占據更多空間
-        left_layout.setStretch(1, 0)  # 讓按鈕占據最小空間
+        left_layout.setStretch(1, 0)  # 讓自訂選項區占據最小空間
+        left_layout.setStretch(2, 0)  # 讓按鈕占據最小空間
+        left_layout.setStretch(3, 0)  # 讓按鈕占據最小空間
         left_widget = QtWidgets.QWidget()
         left_widget.setLayout(left_layout)
 
@@ -102,8 +165,8 @@ class DraggableWindow(QtWidgets.QWidget):
         splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         splitter.addWidget(left_widget)
         splitter.addWidget(self.file_status_list)
-        splitter.setStretchFactor(0, 10)
-        splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(0, 8)
+        splitter.setStretchFactor(1, 4)
 
         # 設置主布局
         main_layout = QtWidgets.QVBoxLayout()
@@ -132,10 +195,16 @@ class DraggableWindow(QtWidgets.QWidget):
         self.completed_files = 0
         self.failed_files = []
 
+    def printSelection(self):
+        if self.overwrite_yes_radio.isChecked():
+            print("是否覆蓋: 是")
+        if self.overwrite_no_radio.isChecked():
+            print("是否覆蓋: 否")
+
     def set_background_image(self):
         """ 設置窗口背景圖片 """
-        # pixmap = QtGui.QPixmap("src/assets/img/cuteBg.jpg")
-        pixmap = QtGui.QPixmap(resource_path("src/assets/img/cuteBg.jpg"))
+        pixmap = QtGui.QPixmap("D:\\TestCase\\src\\assets\\img\\cuteBg.jpg")
+        # pixmap = QtGui.QPixmap(resource_path("src/assets/img/cuteBg.jpg"))
         scaled_pixmap = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                                       Qt.TransformationMode.SmoothTransformation)
         palette = self.palette()
@@ -236,8 +305,8 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def on_button_click(self):
         """ 處理按鈕點擊事件，讓使用者選擇保存 template.xlsx 文件的位置 """
-        # template_path = "src/assets/templates/template.xlsx"
-        template_path = resource_path("src/assets/templates/template.xlsx")
+        template_path = "D:\\TestCase\\src\\assets\\templates\\template.xlsx"
+        # template_path = resource_path("src/assets/templates/template.xlsx")
 
         # 打開文件保存對話框讓使用者選擇保存路徑
         save_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Template",
@@ -252,8 +321,6 @@ class DraggableWindow(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(self, 'Error', f'Failed to save template: {e}')
 
 
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    window = DraggableWindow()
-    window.show()
-    sys.exit(app.exec())
+    def close_application(self):
+        """ 關閉應用程序 """
+        self.close()

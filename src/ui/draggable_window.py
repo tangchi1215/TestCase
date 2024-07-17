@@ -1,7 +1,7 @@
 from functools import partial
 
 from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtCore import Qt, QThreadPool, QDate
 
 from src.service.file_worker import FileWorker
 from src.service import event_handlers
@@ -62,7 +62,7 @@ class DraggableWindow(QtWidgets.QWidget):
         self.overwrite_no_radio.setChecked(True)
 
         # Print Result
-        self.overwrite_yes_radio.toggled.connect(self.printSelection)
+        self.overwrite_yes_radio.toggled.connect(lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
 
         overwrite_layout = QtWidgets.QHBoxLayout()
         overwrite_layout.addWidget(self.overwrite_yes_radio)
@@ -89,20 +89,23 @@ class DraggableWindow(QtWidgets.QWidget):
         # custom_layout.addRow(QtWidgets.QLabel("測試編號前綴:"), prefix_widget)
 
         # 測試日期選項
-        # self.date_today_radio = QtWidgets.QRadioButton("今天")
-        # self.date_other_radio = QtWidgets.QRadioButton("其他")
-        # self.date_other_input = QtWidgets.QDateEdit()
-        # self.date_today_radio.setChecked(True)
-        # self.date_other_input.setEnabled(False)
-        # self.date_other_radio.toggled.connect(self.date_other_input.setEnabled)
-        # date_layout = QtWidgets.QHBoxLayout()
-        # date_layout.addWidget(self.date_today_radio)
-        # date_layout.addWidget(self.date_other_radio)
-        # date_layout.addWidget(self.date_other_input)
-        # date_widget = QtWidgets.QWidget()
-        # date_widget.setLayout(date_layout)
-        # custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
-        #
+        self.date_today_radio = QtWidgets.QRadioButton("今天")
+        self.date_other_radio = QtWidgets.QRadioButton("其他")
+        self.date_other_input = QtWidgets.QDateEdit()
+        self.date_today_radio.setChecked(True)
+        self.date_other_input.setCalendarPopup(True)
+        self.date_other_input.setDate(QDate.currentDate())
+        self.date_other_input.setEnabled(False)
+        self.date_other_radio.toggled.connect(self.date_other_input.setEnabled)
+
+        date_layout = QtWidgets.QHBoxLayout()
+        date_layout.addWidget(self.date_today_radio)
+        date_layout.addWidget(self.date_other_radio)
+        date_layout.addWidget(self.date_other_input)
+        date_widget = QtWidgets.QWidget()
+        date_widget.setLayout(date_layout)
+        custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
+
         custom_group_box.setLayout(custom_layout)
 
         # 設置左側布局
@@ -151,12 +154,6 @@ class DraggableWindow(QtWidgets.QWidget):
         self.total_files = 0
         self.completed_files = 0
         self.failed_files = []
-
-    def printSelection(self):
-        if self.overwrite_yes_radio.isChecked():
-            print("是否覆蓋: 是")
-        if self.overwrite_no_radio.isChecked():
-            print("是否覆蓋: 否")
 
     def set_background_image(self):
         """ 設置窗口背景圖片 """

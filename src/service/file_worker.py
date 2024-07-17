@@ -1,7 +1,8 @@
 from PyQt6.QtCore import QRunnable, pyqtSignal, QObject
-from service.data_manager import DataManager
-from service.document_manager import DocumentManager
-from service.table_formatter import TableFormatter
+from src.service.data_manager import DataManager
+from src.service.document_manager import DocumentManager
+from src.service.table_formatter import TableFormatter
+from src.service import event_handlers
 from docx.shared import Inches
 
 
@@ -12,14 +13,15 @@ class WorkerSignals(QObject):
 
 
 class FileWorker(QRunnable):
-    def __init__(self, file_path):
+    def __init__(self, file_path, overwrite):
         super().__init__()
         self.file_path = file_path
+        self.overwrite = overwrite
         self.signals = WorkerSignals()
 
     def run(self):
         try:
-            self.signals.progress.emit(0) # 更新進度
+            self.signals.progress.emit(0)  # 更新進度
             cleaned_data = DataManager.load_and_prepare_data(self.file_path)
             self.signals.progress.emit(20)  # 更新進度
 
@@ -33,8 +35,11 @@ class FileWorker(QRunnable):
             self.signals.progress.emit(70)  # 更新進度
 
             output_path = self.file_path.replace('.xlsx', '.docx')
+            if not self.overwrite:
+                output_path = event_handlers.handle_existing_file(output_path)
+
             DocumentManager.save_document(doc, output_path)
-            self.signals.progress.emit(100) # 更新進度
+            self.signals.progress.emit(100)  # 更新進度
             self.signals.finished.emit(self.file_path, output_path)
         except Exception as e:
             self.signals.error.emit(self.file_path, str(e))

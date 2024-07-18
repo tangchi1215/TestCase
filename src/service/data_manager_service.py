@@ -3,11 +3,13 @@ import os
 import pandas as pd
 
 
-class DataManager:
+
+
+class DataManagerService:
     @staticmethod
-    def load_and_prepare_data(file_path):
+    def load_and_prepare_data(request):
         try:
-            df = pd.read_excel(file_path, engine='openpyxl')
+            df = pd.read_excel(request.file_path, engine='openpyxl')
             selected_columns = df[['功能類別', '測試個案編號', '個案說明', '預期結果', '測試日期', '測試結果', '備註']]
         except KeyError as e:
             print("標頭不符合指定格式")
@@ -19,9 +21,12 @@ class DataManager:
             '測試結果': '測試\n結果'
         })
         cleaned_data = renamed_columns.dropna(how='all')
-        current_date = datetime.datetime.now().strftime('%Y/%m/%d')
-        cleaned_data['測試日期'] = current_date
+
+        if request.test_date is None:
+            request.test_date = datetime.datetime.now()
+
+        cleaned_data['測試日期'] = request.test_date.strftime('%Y/%m/%d')
         cleaned_data['測試\n結果'] = '通過'
-        base_name = os.path.basename(file_path.split('.')[0])
+        base_name = os.path.basename(request.file_path.split('.')[0])
         cleaned_data['測試個案\n編號'] = [f"{base_name}-{i + 1:02}" for i in range(len(cleaned_data))]
         return cleaned_data.fillna('')

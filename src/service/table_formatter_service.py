@@ -5,7 +5,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
 
 
-class TableFormatter:
+class TableFormatterService:
     @staticmethod
     def set_cell_font(cell, font_name='標楷體', font_size=Pt(10)):
         for paragraph in cell.paragraphs:
@@ -56,11 +56,11 @@ class TableFormatter:
     def set_table_header(row, columns):
         for i, col_name in enumerate(columns):
             row.cells[i].text = str(col_name)
-            TableFormatter.set_cell_shading(row.cells[i], 'D3D3D3')  # 灰色背景
-            TableFormatter.set_cell_border(row.cells[i])
-            TableFormatter.set_cell_font(row.cells[i])  # 設置字體
-            TableFormatter.set_cell_center(row.cells[i])
-            TableFormatter.set_vertical_alignment(row.cells[i])
+            TableFormatterService.set_cell_shading(row.cells[i], 'D3D3D3')  # 灰色背景
+            TableFormatterService.set_cell_border(row.cells[i])
+            TableFormatterService.set_cell_font(row.cells[i])  # 設置字體
+            TableFormatterService.set_cell_center(row.cells[i])
+            TableFormatterService.set_vertical_alignment(row.cells[i])
 
     @staticmethod
     def create_and_format_table(doc, data, column_widths):
@@ -68,10 +68,10 @@ class TableFormatter:
             table = doc.add_table(rows=1, cols=len(data.columns))
             # 設定整行的列寬
             for idx, cell in enumerate(table.rows[0].cells):
-                TableFormatter.set_cell_width(cell, column_widths[idx].emu)
+                TableFormatterService.set_cell_width(cell, column_widths[idx].emu)
 
-            TableFormatter.set_table_header(table.rows[0], data.columns)
-            TableFormatter.add_table_data(table, row)
+            TableFormatterService.set_table_header(table.rows[0], data.columns)
+            TableFormatterService.add_table_data(table, row)
             doc.add_paragraph()  # 添加空行作為分隔
 
     @staticmethod
@@ -79,7 +79,7 @@ class TableFormatter:
         row_cells = table.add_row().cells
         for i, value in enumerate(row_data):
             row_cells[i].text = str(value)
-            TableFormatter.set_cell_border(row_cells[i])
-            TableFormatter.set_cell_font(row_cells[i])  # 設置字體
-            TableFormatter.set_cell_center(row_cells[i])
-            TableFormatter.set_vertical_alignment(row_cells[i])
+            TableFormatterService.set_cell_border(row_cells[i])
+            TableFormatterService.set_cell_font(row_cells[i])  # 設置字體
+            TableFormatterService.set_cell_center(row_cells[i])
+            TableFormatterService.set_vertical_alignment(row_cells[i])

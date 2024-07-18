@@ -3,7 +3,7 @@ from docx.shared import Pt
 from docx.oxml.ns import qn
 
 
-class DocumentManager:
+class DocumentManagerService:
     @staticmethod
     def create_document():
         doc = Document()

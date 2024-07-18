@@ -3,11 +3,13 @@ from functools import partial
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QThreadPool, QDate
 
-from src.service.file_worker import FileWorker
-from src.service import event_handlers
+from src.service.worker.file_worker import FileWorker
+from src.controller import event_handlers
 from src.ui.clickable_label import ClickableLabel
 from src.ui.file_status_widget import FileStatusWidget
 from src.utils.resource_path import resource_path
+
+import datetime
 
 ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
 BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
@@ -221,8 +223,16 @@ class DraggableWindow(QtWidgets.QWidget):
             self.file_status_list.setItemWidget(item, file_status_widget)
             QtWidgets.QApplication.processEvents()  # 更新 UI
 
-            # 創建並運行 FileWorker
-            worker = FileWorker(file_path, self.overwrite_yes_radio.isChecked())
+            # 獲取選擇的日期
+            if self.date_other_radio.isChecked():
+                selected_date = self.date_other_input.date().toPyDate()
+            else:
+                selected_date = QDate.currentDate().toPyDate()
+
+            # 將日期轉換為 datetime.datetime 物件
+            selected_date = datetime.datetime.combine(selected_date, datetime.datetime.min.time())
+
+            worker = FileWorker(file_path, self.overwrite_yes_radio.isChecked(), selected_date)
             worker.signals.progress.connect(file_status_widget.increment_progress)
             worker.signals.finished.connect(partial(event_handlers.on_file_finished, self, file_path))
             worker.signals.error.connect(partial(event_handlers.on_file_error, self, file_path))

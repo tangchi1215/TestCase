@@ -10,6 +10,7 @@ from src.ui.clickable_label import ClickableLabel
 from src.ui.file_status_widget import FileStatusWidget
 from src.utils.resource_path import resource_path
 from src.utils.style_loader import load_style
+from src.utils.ui_factory import UIFactory
 
 ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
 BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
@@ -53,16 +54,16 @@ class DraggableWindow(QtWidgets.QWidget):
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # 創建可點擊的 QLabel
-        self.drag_label = ClickableLabel('Drag a file here', self)
+        self.drag_label = UIFactory.create_label('Drag a file here', self)
         self.drag_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         load_style(self.drag_label, LABEL_DEFAULT_STYLE_PATH)
         self.drag_label.clicked.connect(self.open_file_dialog)
 
         # 創建一個按鈕
-        self.download_template_btn = QtWidgets.QPushButton('Download Template', self)
+        self.download_template_btn = UIFactory.create_button('Download Template', self)
 
         # 創建一個離開按鈕
-        self.exit_btn = QtWidgets.QPushButton('Exit', self)
+        self.exit_btn = UIFactory.create_button('Exit', self)
 
         # 創建一個 QListWidget 顯示轉檔狀態
         self.file_status_list = QtWidgets.QListWidget()
@@ -131,9 +132,8 @@ class DraggableWindow(QtWidgets.QWidget):
         custom_layout = QtWidgets.QFormLayout()
 
         # 覆蓋已存在檔案選項
-        self.overwrite_yes_radio = QtWidgets.QRadioButton("是")
-        self.overwrite_no_radio = QtWidgets.QRadioButton("否")
-        self.overwrite_no_radio.setChecked(True)
+        self.overwrite_yes_radio = UIFactory.create_radio_button("是", self)
+        self.overwrite_no_radio = UIFactory.create_radio_button("否", self, checked=True)
 
         overwrite_layout = QtWidgets.QHBoxLayout()
         overwrite_layout.addWidget(self.overwrite_yes_radio)
@@ -143,11 +143,10 @@ class DraggableWindow(QtWidgets.QWidget):
         custom_layout.addRow(QtWidgets.QLabel("覆蓋已存在檔案:"), overwrite_widget)
 
         # 測試編號前綴選項
-        self.seqNo_by_filename_radio = QtWidgets.QRadioButton("檔名_流水號")
-        self.seqNo_by_excel_radio = QtWidgets.QRadioButton("讀取excel測試編號")
-        self.seqNo_by_custom_radio = QtWidgets.QRadioButton("自訂前綴_流水號")
-        self.seqNo_custom_input = QtWidgets.QLineEdit()
-        self.seqNo_by_filename_radio.setChecked(True)
+        self.seqNo_by_filename_radio = UIFactory.create_radio_button("檔名_流水號", self, checked=True)
+        self.seqNo_by_excel_radio = UIFactory.create_radio_button("讀取excel測試編號", self)
+        self.seqNo_by_custom_radio = UIFactory.create_radio_button("自訂前綴_流水號", self)
+        self.seqNo_custom_input = QtWidgets.QLineEdit(self)
         self.seqNo_custom_input.setEnabled(False)
 
         seq_no_layout = QtWidgets.QHBoxLayout()
@@ -160,10 +159,9 @@ class DraggableWindow(QtWidgets.QWidget):
         custom_layout.addRow(QtWidgets.QLabel("測試編號:"), seq_no_widget)
 
         # 測試日期選項
-        self.date_today_radio = QtWidgets.QRadioButton("今天")
-        self.date_custom_radio = QtWidgets.QRadioButton("自訂")
-        self.date_custom_input = QtWidgets.QDateEdit()
-        self.date_today_radio.setChecked(True)
+        self.date_today_radio = UIFactory.create_radio_button("今天", self, checked=True)
+        self.date_custom_radio = UIFactory.create_radio_button("自訂", self)
+        self.date_custom_input = QtWidgets.QDateEdit(self)
         self.date_custom_input.setCalendarPopup(True)
         self.date_custom_input.setDate(QDate.currentDate())
         self.date_custom_input.setEnabled(False)

@@ -37,7 +37,7 @@ def on_file_finished(parent, file_path, output_path):
 
 
 @QtCore.pyqtSlot(str, str)
-def update_ui_on_finished(parent, file_path, output_path):
+def update_ui_on_finished(parent):
     parent.completed_files += 1
     parent.check_all_files_completed()
 

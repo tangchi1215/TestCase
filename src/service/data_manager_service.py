@@ -3,8 +3,6 @@ import os
 import pandas as pd
 
 
-
-
 class DataManagerService:
     @staticmethod
     def load_and_prepare_data(request):

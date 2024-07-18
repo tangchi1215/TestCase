@@ -34,7 +34,7 @@ class FileWorker(QRunnable):
 
             output_path = self.file_path.replace('.xlsx', '.docx')
             if not self.overwrite:
-                output_path = event_handlers_service.handle_existing_file(output_path)
+                output_path = event_handlers.handle_existing_file(output_path)
 
             DocumentManagerService.save_document(doc, output_path)
             self.signals.progress.emit(100)  # 更新進度

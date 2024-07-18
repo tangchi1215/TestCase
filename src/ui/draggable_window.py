@@ -1,5 +1,6 @@
 from functools import partial
 
+
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QThreadPool, QDate
 
@@ -64,7 +65,8 @@ class DraggableWindow(QtWidgets.QWidget):
         self.overwrite_no_radio.setChecked(True)
 
         # Print Result
-        self.overwrite_yes_radio.toggled.connect(lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
+        self.overwrite_yes_radio.toggled.connect(
+            lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
 
         overwrite_layout = QtWidgets.QHBoxLayout()
         overwrite_layout.addWidget(self.overwrite_yes_radio)
@@ -239,8 +241,8 @@ class DraggableWindow(QtWidgets.QWidget):
             self.thread_pool.start(worker)
 
     @QtCore.pyqtSlot(str, str)
-    def update_ui_on_finished(self, file_path, output_path):
-        event_handlers.update_ui_on_finished(self, file_path, output_path)
+    def update_ui_on_finished(self):
+        event_handlers.update_ui_on_finished(self)
 
     def check_all_files_completed(self):
         """ 檢查是否所有文件都已完成處理 """

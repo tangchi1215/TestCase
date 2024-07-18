@@ -1,16 +1,15 @@
+import datetime
 from functools import partial
-
 
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QThreadPool, QDate
 
-from src.service.worker.file_worker import FileWorker
 from src.controller import event_handlers
+from src.service.worker.file_worker import FileWorker
 from src.ui.clickable_label import ClickableLabel
 from src.ui.file_status_widget import FileStatusWidget
 from src.utils.resource_path import resource_path
-
-import datetime
+from src.utils.style_loader import load_style
 
 ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
 BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
@@ -19,16 +18,32 @@ LABEL_ACTIVE_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_active.qss"
 LIST_WIDGET_STYLE_PATH = "D:\\TestCase\\src\\styles\\list_widget.qss"
 
 
-def load_style(widget, style_path):
-    """ 加載 qss 樣式並應用到 widget """
-    with open(style_path, "r") as f:
-        widget.setStyleSheet(f.read())
-
-
 class DraggableWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+        self.drag_label = None
+        self.download_template_btn = None
+        self.exit_btn = None
+        self.file_status_list = None
+        self.overlay = None
+        self.overwrite_yes_radio = None
+        self.overwrite_no_radio = None
+        self.seqNo_by_filename_radio = None
+        self.seqNo_by_excel_radio = None
+        self.seqNo_by_custom_radio = None
+        self.seqNo_custom_input = None
+        self.date_today_radio = None
+        self.date_custom_radio = None
+        self.date_custom_input = None
+        self.thread_pool = QThreadPool()
+        self.total_files = 0
+        self.completed_files = 0
+        self.failed_files = []
 
+        self.init_ui()
+        self.init_logic()
+
+    def init_ui(self):
         # 設置窗口標題和大小
         self.setWindowTitle('測試報告產生器')
         self.setGeometry(100, 100, 800, 500)
@@ -45,72 +60,15 @@ class DraggableWindow(QtWidgets.QWidget):
 
         # 創建一個按鈕
         self.download_template_btn = QtWidgets.QPushButton('Download Template', self)
-        self.download_template_btn.clicked.connect(lambda: event_handlers.download_template(self))
 
         # 創建一個離開按鈕
         self.exit_btn = QtWidgets.QPushButton('Exit', self)
-        self.exit_btn.clicked.connect(self.close_application)
 
         # 創建一個 QListWidget 顯示轉檔狀態
         self.file_status_list = QtWidgets.QListWidget()
         load_style(self.file_status_list, LIST_WIDGET_STYLE_PATH)
 
-        # 創建自訂區域
-        custom_group_box = QtWidgets.QGroupBox("自訂選項")
-        custom_layout = QtWidgets.QFormLayout()
-
-        # 覆蓋已存在檔案選項
-        self.overwrite_yes_radio = QtWidgets.QRadioButton("是")
-        self.overwrite_no_radio = QtWidgets.QRadioButton("否")
-        self.overwrite_no_radio.setChecked(True)
-
-        # Print Result
-        self.overwrite_yes_radio.toggled.connect(
-            lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
-
-        overwrite_layout = QtWidgets.QHBoxLayout()
-        overwrite_layout.addWidget(self.overwrite_yes_radio)
-        overwrite_layout.addWidget(self.overwrite_no_radio)
-        overwrite_widget = QtWidgets.QWidget()
-        overwrite_widget.setLayout(overwrite_layout)
-        custom_layout.addRow(QtWidgets.QLabel("覆蓋已存在檔案:"), overwrite_widget)
-
-        # 測試編號前綴選項
-        # self.prefix_filename_radio = QtWidgets.QRadioButton("依檔名")
-        # self.prefix_filename_xlsx_radio = QtWidgets.QRadioButton("依文件內自訂")
-        # self.prefix_other_radio = QtWidgets.QRadioButton("其他")
-        # self.prefix_other_input = QtWidgets.QLineEdit()
-        # self.prefix_filename_radio.setChecked(True)
-        # self.prefix_other_input.setEnabled(False)
-        # self.prefix_other_radio.toggled.connect(self.prefix_other_input.setEnabled)
-        # prefix_layout = QtWidgets.QHBoxLayout()
-        # prefix_layout.addWidget(self.prefix_filename_radio)
-        # prefix_layout.addWidget(self.prefix_filename_xlsx_radio)
-        # prefix_layout.addWidget(self.prefix_other_radio)
-        # prefix_layout.addWidget(self.prefix_other_input)
-        # prefix_widget = QtWidgets.QWidget()
-        # prefix_widget.setLayout(prefix_layout)
-        # custom_layout.addRow(QtWidgets.QLabel("測試編號前綴:"), prefix_widget)
-
-        # 測試日期選項
-        self.date_today_radio = QtWidgets.QRadioButton("今天")
-        self.date_other_radio = QtWidgets.QRadioButton("其他")
-        self.date_other_input = QtWidgets.QDateEdit()
-        self.date_today_radio.setChecked(True)
-        self.date_other_input.setCalendarPopup(True)
-        self.date_other_input.setDate(QDate.currentDate())
-        self.date_other_input.setEnabled(False)
-        self.date_other_radio.toggled.connect(self.date_other_input.setEnabled)
-
-        date_layout = QtWidgets.QHBoxLayout()
-        date_layout.addWidget(self.date_today_radio)
-        date_layout.addWidget(self.date_other_radio)
-        date_layout.addWidget(self.date_other_input)
-        date_widget = QtWidgets.QWidget()
-        date_widget.setLayout(date_layout)
-        custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
-
-        custom_group_box.setLayout(custom_layout)
+        custom_group_box = self.create_custom_group_box()
 
         # 設置左側布局
         left_layout = QtWidgets.QVBoxLayout()
@@ -151,13 +109,75 @@ class DraggableWindow(QtWidgets.QWidget):
         self.set_background_image()
         self.show()
 
-        # 初始化 QThreadPool
-        self.thread_pool = QThreadPool()
-
         # 初始化文件計數器和狀態列表
         self.total_files = 0
         self.completed_files = 0
         self.failed_files = []
+
+    def init_logic(self):
+        self.download_template_btn.clicked.connect(lambda: event_handlers.download_template(self))
+        self.exit_btn.clicked.connect(self.close_application)
+        # Print Result
+        self.overwrite_yes_radio.toggled.connect(
+            lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
+        self.seqNo_by_custom_radio.toggled.connect(self.seqNo_custom_input.setEnabled)
+        self.date_custom_radio.toggled.connect(self.date_custom_input.setEnabled)
+        # 初始化 QThreadPool
+        self.thread_pool = QThreadPool()
+
+    def create_custom_group_box(self):
+        # 創建自訂區域
+        custom_group_box = QtWidgets.QGroupBox("自訂選項")
+        custom_layout = QtWidgets.QFormLayout()
+
+        # 覆蓋已存在檔案選項
+        self.overwrite_yes_radio = QtWidgets.QRadioButton("是")
+        self.overwrite_no_radio = QtWidgets.QRadioButton("否")
+        self.overwrite_no_radio.setChecked(True)
+
+        overwrite_layout = QtWidgets.QHBoxLayout()
+        overwrite_layout.addWidget(self.overwrite_yes_radio)
+        overwrite_layout.addWidget(self.overwrite_no_radio)
+        overwrite_widget = QtWidgets.QWidget()
+        overwrite_widget.setLayout(overwrite_layout)
+        custom_layout.addRow(QtWidgets.QLabel("覆蓋已存在檔案:"), overwrite_widget)
+
+        # 測試編號前綴選項
+        self.seqNo_by_filename_radio = QtWidgets.QRadioButton("檔名_流水號")
+        self.seqNo_by_excel_radio = QtWidgets.QRadioButton("讀取excel測試編號")
+        self.seqNo_by_custom_radio = QtWidgets.QRadioButton("自訂前綴_流水號")
+        self.seqNo_custom_input = QtWidgets.QLineEdit()
+        self.seqNo_by_filename_radio.setChecked(True)
+        self.seqNo_custom_input.setEnabled(False)
+
+        seq_no_layout = QtWidgets.QHBoxLayout()
+        seq_no_layout.addWidget(self.seqNo_by_filename_radio)
+        seq_no_layout.addWidget(self.seqNo_by_excel_radio)
+        seq_no_layout.addWidget(self.seqNo_by_custom_radio)
+        seq_no_layout.addWidget(self.seqNo_custom_input)
+        seq_no_widget = QtWidgets.QWidget()
+        seq_no_widget.setLayout(seq_no_layout)
+        custom_layout.addRow(QtWidgets.QLabel("測試編號:"), seq_no_widget)
+
+        # 測試日期選項
+        self.date_today_radio = QtWidgets.QRadioButton("今天")
+        self.date_custom_radio = QtWidgets.QRadioButton("自訂")
+        self.date_custom_input = QtWidgets.QDateEdit()
+        self.date_today_radio.setChecked(True)
+        self.date_custom_input.setCalendarPopup(True)
+        self.date_custom_input.setDate(QDate.currentDate())
+        self.date_custom_input.setEnabled(False)
+
+        date_layout = QtWidgets.QHBoxLayout()
+        date_layout.addWidget(self.date_today_radio)
+        date_layout.addWidget(self.date_custom_radio)
+        date_layout.addWidget(self.date_custom_input)
+        date_widget = QtWidgets.QWidget()
+        date_widget.setLayout(date_layout)
+        custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
+
+        custom_group_box.setLayout(custom_layout)
+        return custom_group_box
 
     def set_background_image(self):
         """ 設置窗口背景圖片 """
@@ -211,6 +231,19 @@ class DraggableWindow(QtWidgets.QWidget):
         if files:
             self.process_files(files)
 
+    def check_all_files_completed(self):
+        """ 檢查是否所有文件都已完成處理 """
+        if self.completed_files == self.total_files:
+            QtCore.QTimer.singleShot(1000, lambda: event_handlers.show_completion_message(self))
+
+    def close_application(self):
+        """ 關閉應用程序 """
+        self.close()
+
+    @QtCore.pyqtSlot(str, str)
+    def update_ui_on_finished(self):
+        event_handlers.update_ui_on_finished(self)
+
     def process_files(self, files):
         """ 處理拖動進來或選擇的文件 """
         self.total_files = len(files)
@@ -226,8 +259,8 @@ class DraggableWindow(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()  # 更新 UI
 
             # 獲取選擇的日期
-            if self.date_other_radio.isChecked():
-                selected_date = self.date_other_input.date().toPyDate()
+            if self.date_custom_radio.isChecked():
+                selected_date = self.date_custom_input.date().toPyDate()
             else:
                 selected_date = QDate.currentDate().toPyDate()
 
@@ -239,16 +272,3 @@ class DraggableWindow(QtWidgets.QWidget):
             worker.signals.finished.connect(partial(event_handlers.on_file_finished, self, file_path))
             worker.signals.error.connect(partial(event_handlers.on_file_error, self, file_path))
             self.thread_pool.start(worker)
-
-    @QtCore.pyqtSlot(str, str)
-    def update_ui_on_finished(self):
-        event_handlers.update_ui_on_finished(self)
-
-    def check_all_files_completed(self):
-        """ 檢查是否所有文件都已完成處理 """
-        if self.completed_files == self.total_files:
-            QtCore.QTimer.singleShot(1000, lambda: event_handlers.show_completion_message(self))
-
-    def close_application(self):
-        """ 關閉應用程序 """
-        self.close()

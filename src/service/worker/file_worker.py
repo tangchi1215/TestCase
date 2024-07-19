@@ -9,17 +9,19 @@ from src.domain.file_metadata import FileMetadata
 
 
 class FileWorker(QRunnable):
-    def __init__(self, file_path, overwrite, date):
+    def __init__(self, file_path, overwrite, date, seq_no_option, custom_prefix):
         super().__init__()
         self.file_path = file_path
         self.overwrite = overwrite
         self.date = date
+        self.seq_no_option = seq_no_option
+        self.custom_prefix = custom_prefix
         self.signals = WorkerSignals()
 
     def run(self):
         try:
             self.signals.progress.emit(0)  # 更新進度
-            request = FileMetadata(self.file_path, self.date)
+            request = FileMetadata(self.file_path, self.date, self.seq_no_option, self.custom_prefix)
             cleaned_data = DataManagerService.load_and_prepare_data(request)
             self.signals.progress.emit(20)  # 更新進度
 

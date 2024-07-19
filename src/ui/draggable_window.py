@@ -6,7 +6,6 @@ from PyQt6.QtCore import Qt, QThreadPool, QDate
 
 from src.controller import event_handlers
 from src.service.worker.file_worker import FileWorker
-from src.ui.clickable_label import ClickableLabel
 from src.ui.file_status_widget import FileStatusWidget
 from src.utils.resource_path import resource_path
 from src.utils.style_loader import load_style
@@ -262,10 +261,27 @@ class DraggableWindow(QtWidgets.QWidget):
             else:
                 selected_date = QDate.currentDate().toPyDate()
 
+            # 初始化測試編號選項
+            seq_no_option = "filename"  # 默認值
+
+            # 獲取測試編號選項
+            if self.seqNo_by_filename_radio.isChecked():
+                seq_no_option = "filename"
+            elif self.seqNo_by_excel_radio.isChecked():
+                seq_no_option = "excel"
+            elif self.seqNo_by_custom_radio.isChecked():
+                seq_no_option = "custom"
+            custom_prefix = self.seqNo_custom_input.text()
+
             # 將日期轉換為 datetime.datetime 物件
             selected_date = datetime.datetime.combine(selected_date, datetime.datetime.min.time())
 
-            worker = FileWorker(file_path, self.overwrite_yes_radio.isChecked(), selected_date)
+            worker = FileWorker(file_path,
+                                self.overwrite_yes_radio.isChecked(),
+                                selected_date,
+                                seq_no_option,
+                                custom_prefix)
+
             worker.signals.progress.connect(file_status_widget.increment_progress)
             worker.signals.finished.connect(partial(event_handlers.on_file_finished, self, file_path))
             worker.signals.error.connect(partial(event_handlers.on_file_error, self, file_path))

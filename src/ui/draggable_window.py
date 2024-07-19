@@ -11,11 +11,17 @@ from src.utils.resource_path import resource_path
 from src.utils.style_loader import load_style
 from src.utils.ui_factory import UIFactory
 
-ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
-BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
-LABEL_DEFAULT_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_default.qss"
-LABEL_ACTIVE_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_active.qss"
-LIST_WIDGET_STYLE_PATH = "D:\\TestCase\\src\\styles\\list_widget.qss"
+ICON_PATH = "src/assets/img/cuteIcon.png"
+BACKGROUND_PATH = "src/assets/img/cuteBg.jpg"
+LABEL_DEFAULT_STYLE_PATH = "src/styles/label_default.qss"
+LABEL_ACTIVE_STYLE_PATH = "src/styles/label_active.qss"
+LIST_WIDGET_STYLE_PATH = "src/styles/list_widget.qss"
+
+# ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
+# BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
+# LABEL_DEFAULT_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_default.qss"
+# LABEL_ACTIVE_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_active.qss"
+# LIST_WIDGET_STYLE_PATH = "D:\\TestCase\\src\\styles\\list_widget.qss"
 
 
 class DraggableWindow(QtWidgets.QWidget):
@@ -55,7 +61,7 @@ class DraggableWindow(QtWidgets.QWidget):
         # 創建可點擊的 QLabel
         self.drag_label = UIFactory.create_label('Drag a file here', self)
         self.drag_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        load_style(self.drag_label, LABEL_DEFAULT_STYLE_PATH)
+        load_style(self.drag_label, resource_path(LABEL_DEFAULT_STYLE_PATH))
         self.drag_label.clicked.connect(self.open_file_dialog)
 
         # 創建一個按鈕
@@ -66,7 +72,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
         # 創建一個 QListWidget 顯示轉檔狀態
         self.file_status_list = QtWidgets.QListWidget()
-        load_style(self.file_status_list, LIST_WIDGET_STYLE_PATH)
+        load_style(self.file_status_list, resource_path(LIST_WIDGET_STYLE_PATH))
 
         custom_group_box = self.create_custom_group_box()
 
@@ -117,9 +123,6 @@ class DraggableWindow(QtWidgets.QWidget):
     def init_logic(self):
         self.download_template_btn.clicked.connect(lambda: event_handlers.download_template(self))
         self.exit_btn.clicked.connect(self.close_application)
-        # Print Result
-        self.overwrite_yes_radio.toggled.connect(
-            lambda: event_handlers.print_selection(self.overwrite_yes_radio, self.overwrite_no_radio))
         self.seqNo_by_custom_radio.toggled.connect(self.seqNo_custom_input.setEnabled)
         self.date_custom_radio.toggled.connect(self.date_custom_input.setEnabled)
         # 初始化 QThreadPool
@@ -178,7 +181,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def set_background_image(self):
         """ 設置窗口背景圖片 """
-        pixmap = QtGui.QPixmap(BACKGROUND_PATH)
+        pixmap = QtGui.QPixmap(resource_path(BACKGROUND_PATH))
         scaled_pixmap = pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
                                       Qt.TransformationMode.SmoothTransformation)
         palette = self.palette()
@@ -199,7 +202,7 @@ class DraggableWindow(QtWidgets.QWidget):
         """ 當窗口大小改變時，重新設置背景圖片和 QLabel 大小 """
         self.set_background_image()
         self.overlay.setGeometry(self.rect())
-        load_style(self.drag_label, LABEL_DEFAULT_STYLE_PATH)  # 重新設置樣式表確保邊框顯示
+        load_style(self.drag_label, resource_path(LABEL_DEFAULT_STYLE_PATH))  # 重新設置樣式表確保邊框顯示
         self.drag_label.resize(self.size())
         super().resizeEvent(event)
 
@@ -207,15 +210,15 @@ class DraggableWindow(QtWidgets.QWidget):
         """ 當拖動項目進入窗口時檢查是否接受拖動 """
         if event.mimeData().hasUrls() and all(url.fileName().endswith('.xlsx') for url in event.mimeData().urls()):
             event.acceptProposedAction()
-            load_style(self.drag_label, LABEL_ACTIVE_STYLE_PATH)
+            load_style(self.drag_label, resource_path(LABEL_ACTIVE_STYLE_PATH))
 
     def dragLeaveEvent(self, event):
         """ 當拖動項目離開窗口時恢復 QLabel 樣式 """
-        load_style(self.drag_label, LABEL_DEFAULT_STYLE_PATH)
+        load_style(self.drag_label, resource_path(LABEL_DEFAULT_STYLE_PATH))
 
     def dropEvent(self, event):
         """ 當拖動項目放下時處理文件 """
-        load_style(self.drag_label, LABEL_DEFAULT_STYLE_PATH)
+        load_style(self.drag_label, resource_path(LABEL_DEFAULT_STYLE_PATH))
         files = [url.toLocalFile() for url in event.mimeData().urls() if url.fileName().endswith('.xlsx')]
         if files:
             self.process_files(files)

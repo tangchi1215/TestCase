@@ -2,8 +2,10 @@ import os
 import shutil
 
 from PyQt6 import QtWidgets, QtCore
+from src.utils.resource_path import resource_path
 
-TEMPLATE_XLSX = "D:\\TestCase\\src\\assets\\templates\\template.xlsx"
+TEMPLATE_XLSX = "src/assets/templates/template.xlsx"
+# TEMPLATE_XLSX = "D:\\TestCase\\src\\assets\\templates\\template.xlsx"
 
 
 def print_selection(overwrite_yes_radio, overwrite_no_radio):
@@ -16,7 +18,7 @@ def print_selection(overwrite_yes_radio, overwrite_no_radio):
 
 def download_template(parent):
     """ 處理按鈕點擊事件，讓使用者選擇保存 template.xlsx 文件的位置 """
-    template_path = TEMPLATE_XLSX
+    template_path = resource_path(TEMPLATE_XLSX)
 
     # 打開文件保存對話框讓使用者選擇保存路徑
     save_path, _ = QtWidgets.QFileDialog.getSaveFileName(parent, "Save Template",

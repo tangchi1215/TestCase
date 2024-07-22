@@ -52,7 +52,10 @@ class DraggableWindow(QtWidgets.QWidget):
     def init_ui(self):
         # 設置窗口標題和大小
         self.setWindowTitle('測試報告產生器')
-        self.setGeometry(100, 100, 800, 500)
+        screen = QtWidgets.QApplication.primaryScreen().availableGeometry()
+        size = self.geometry()
+        self.setGeometry((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2
+                         , 800, 500)
 
         # 設置圖標
         icon_path = resource_path(ICON_PATH)

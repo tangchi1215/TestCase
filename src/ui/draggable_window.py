@@ -1,12 +1,7 @@
-import datetime
-from functools import partial
-
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QThreadPool, QDate
 
 from src.controller import event_handlers
-from src.service.worker.file_worker import FileWorker
-from src.ui.file_status_widget import FileStatusWidget
 from src.utils.resource_path import resource_path
 from src.utils.style_loader import load_style
 from src.utils.ui_factory import UIFactory
@@ -248,6 +243,11 @@ class DraggableWindow(QtWidgets.QWidget):
         event_handlers.update_ui_on_finished(self)
 
     def process_files(self, files):
+        from src.service.worker.file_worker import FileWorker
+        import datetime
+        from functools import partial
+        from src.ui.file_status_widget import FileStatusWidget
+
         """ 處理拖動進來或選擇的文件 """
         self.total_files = len(files)
         self.completed_files = 0

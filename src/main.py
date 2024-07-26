@@ -1,4 +1,7 @@
+import os
+import py_compile
 import sys
+import multiprocessing
 
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -10,9 +13,21 @@ from utils.resource_path import resource_path
 SPLASH_IMAGE_PATH = "./src/assets/img/splash_image.png"
 
 
+def compile_all_py_files(directory):
+    files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.py'):
+                files.append(os.path.join(root, file))
+
+    with multiprocessing.Pool() as pool:
+        pool.map(py_compile.compile, files)
+
+
 def perform_initialization():
     import time
-    time.sleep(3)
+    compile_all_py_files('src')
+    time.sleep(1)
 
 
 class InitializationThread(QThread):

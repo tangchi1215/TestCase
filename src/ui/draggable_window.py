@@ -6,11 +6,14 @@ from src.utils.resource_path import resource_path
 from src.utils.style_loader import load_style
 from src.utils.ui_factory import UIFactory
 
+
 ICON_PATH = "src/assets/img/cuteIcon.png"
 BACKGROUND_PATH = "src/assets/img/cuteBg.jpg"
 LABEL_DEFAULT_STYLE_PATH = "src/styles/label_default.qss"
 LABEL_ACTIVE_STYLE_PATH = "src/styles/label_active.qss"
 LIST_WIDGET_STYLE_PATH = "src/styles/list_widget.qss"
+GOODBYE_GIF_PATH = "src/assets/img/goodbye_gif.GIF"
+GOODBYE_SOUND_PATH = "src/assets/sound/goodbye_sound.mp3"
 
 # ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
 # BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
@@ -120,7 +123,7 @@ class DraggableWindow(QtWidgets.QWidget):
 
     def init_logic(self):
         self.download_template_btn.clicked.connect(lambda: event_handlers.download_template(self))
-        self.exit_btn.clicked.connect(self.close_application)
+        self.exit_btn.clicked.connect(self.show_goodbye_window)
         self.seqNo_by_custom_radio.toggled.connect(self.seqNo_custom_input.setEnabled)
         self.date_custom_radio.toggled.connect(self.date_custom_input.setEnabled)
         # 初始化 QThreadPool
@@ -233,6 +236,14 @@ class DraggableWindow(QtWidgets.QWidget):
         """ 檢查是否所有文件都已完成處理 """
         if self.completed_files == self.total_files:
             QtCore.QTimer.singleShot(1000, lambda: event_handlers.show_completion_message(self))
+
+    def show_goodbye_window(self):
+        from src.ui.goodbye_window import GoodbyeWindow
+        gif_path = resource_path(GOODBYE_GIF_PATH)
+        sound_path = resource_path(GOODBYE_SOUND_PATH)
+        goodbye_window = GoodbyeWindow(gif_path, sound_path)
+        goodbye_window.finished.connect(self.close_application)
+        goodbye_window.exec()
 
     def close_application(self):
         """ 關閉應用程序 """

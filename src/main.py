@@ -7,10 +7,10 @@ from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QApplication
 from ui.slash_screen import SplashScreen
+from ui.draggable_window import DraggableWindow
 from utils.resource_path import resource_path
-
-# SPLASH_IMAGE_PATH = "D:\\TestCase\\src\\assets\\img\\splash_image.png"
-SPLASH_IMAGE_PATH = "./src/assets/img/splash_image.png"
+# SPLASH_IMAGE_PATH = "D:\\TestCase\\src\\assets\\img\\splash_image.jpg"
+SPLASH_IMAGE_PATH = "./src/assets/img/splash_image.jpg"
 
 
 def compile_all_py_files(directory):
@@ -39,7 +39,6 @@ class InitializationThread(QThread):
 
 
 def show_main_window():
-    from ui.draggable_window import DraggableWindow
     window = DraggableWindow()
     window.show()
 

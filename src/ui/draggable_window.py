@@ -8,18 +8,24 @@ from src.utils.ui_factory import UIFactory
 
 
 ICON_PATH = "src/assets/img/cuteIcon.png"
-BACKGROUND_PATH = "src/assets/img/cuteBg.jpg"
+BACKGROUND_PATH = "src/assets/img/bg.jpg"
 LABEL_DEFAULT_STYLE_PATH = "src/styles/label_default.qss"
 LABEL_ACTIVE_STYLE_PATH = "src/styles/label_active.qss"
 LIST_WIDGET_STYLE_PATH = "src/styles/list_widget.qss"
+RADIO_BTN_STYLE_PATH = "src/styles/radio_btn.qss"
+GLOBAL_STYLE_PATH = "src/styles/global_styles.qss"
 GOODBYE_GIF_PATH = "src/assets/img/goodbye_gif.GIF"
 GOODBYE_SOUND_PATH = "src/assets/sound/goodbye_sound.mp3"
 
 # ICON_PATH = "D:\\TestCase\\src\\assets\\img\\cuteIcon.png"
-# BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\cuteBg.jpg"
+# BACKGROUND_PATH = "D:\\TestCase\\src\\assets\\img\\bg.jpg"
 # LABEL_DEFAULT_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_default.qss"
 # LABEL_ACTIVE_STYLE_PATH = "D:\\TestCase\\src\\styles\\label_active.qss"
 # LIST_WIDGET_STYLE_PATH = "D:\\TestCase\\src\\styles\\list_widget.qss"
+# RADIO_BTN_STYLE_PATH = "D:\\TestCase\\src\\styles\\radio_btn.qss"
+# GLOBAL_STYLE_PATH = "D:\\TestCase\\src\\styles\\global_styles.qss"
+# GOODBYE_GIF_PATH = "D:\\TestCase\\src\\assets\\img\\goodbye_gif.GIF"
+# GOODBYE_SOUND_PATH = "D:\\TestCase\\src\\assets\\sound\\goodbye_sound.mp3"
 
 
 class DraggableWindow(QtWidgets.QWidget):
@@ -46,14 +52,15 @@ class DraggableWindow(QtWidgets.QWidget):
 
         self.init_ui()
         self.init_logic()
+        # 加載全局樣式
+        load_style(self, resource_path(GLOBAL_STYLE_PATH))
 
     def init_ui(self):
         # 設置窗口標題和大小
         self.setWindowTitle('測試報告產生器')
         screen = QtWidgets.QApplication.primaryScreen().availableGeometry()
-        size = self.geometry()
-        self.setGeometry((screen.width() - size.width()) // 2, (screen.height() - size.height()) // 2
-                         , 800, 500)
+        self.setGeometry((screen.width() - 1000) // 2, (screen.height() - 500) // 2
+                         , 1000, 500)
 
         # 設置圖標
         icon_path = resource_path(ICON_PATH)
@@ -94,8 +101,8 @@ class DraggableWindow(QtWidgets.QWidget):
         splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         splitter.addWidget(left_widget)
         splitter.addWidget(self.file_status_list)
-        splitter.setStretchFactor(0, 8)
-        splitter.setStretchFactor(1, 4)
+        splitter.setStretchFactor(0, 7)
+        splitter.setStretchFactor(1, 5)
 
         # 設置主布局
         main_layout = QtWidgets.QVBoxLayout()
@@ -138,6 +145,9 @@ class DraggableWindow(QtWidgets.QWidget):
         self.overwrite_yes_radio = UIFactory.create_radio_button("是", self)
         self.overwrite_no_radio = UIFactory.create_radio_button("否", self, checked=True)
 
+        load_style(self.overwrite_yes_radio, resource_path(RADIO_BTN_STYLE_PATH))
+        load_style(self.overwrite_no_radio, resource_path(RADIO_BTN_STYLE_PATH))
+
         overwrite_layout = QtWidgets.QHBoxLayout()
         overwrite_layout.addWidget(self.overwrite_yes_radio)
         overwrite_layout.addWidget(self.overwrite_no_radio)
@@ -151,6 +161,10 @@ class DraggableWindow(QtWidgets.QWidget):
         self.seqNo_by_custom_radio = UIFactory.create_radio_button("自訂前綴_流水號", self)
         self.seqNo_custom_input = QtWidgets.QLineEdit(self)
         self.seqNo_custom_input.setEnabled(False)
+
+        load_style(self.seqNo_by_filename_radio, resource_path(RADIO_BTN_STYLE_PATH))
+        load_style(self.seqNo_by_excel_radio, resource_path(RADIO_BTN_STYLE_PATH))
+        load_style(self.seqNo_by_custom_radio, resource_path(RADIO_BTN_STYLE_PATH))
 
         seq_no_layout = QtWidgets.QHBoxLayout()
         seq_no_layout.addWidget(self.seqNo_by_filename_radio)
@@ -168,6 +182,9 @@ class DraggableWindow(QtWidgets.QWidget):
         self.date_custom_input.setCalendarPopup(True)
         self.date_custom_input.setDate(QDate.currentDate())
         self.date_custom_input.setEnabled(False)
+
+        load_style(self.date_today_radio, resource_path(RADIO_BTN_STYLE_PATH))
+        load_style(self.date_custom_radio, resource_path(RADIO_BTN_STYLE_PATH))
 
         date_layout = QtWidgets.QHBoxLayout()
         date_layout.addWidget(self.date_today_radio)

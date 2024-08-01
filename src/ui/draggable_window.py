@@ -186,10 +186,14 @@ class DraggableWindow(QtWidgets.QWidget):
         load_style(self.date_today_radio, resource_path(RADIO_BTN_STYLE_PATH))
         load_style(self.date_custom_radio, resource_path(RADIO_BTN_STYLE_PATH))
 
+        date_custom_layout = QtWidgets.QHBoxLayout()
+        date_custom_layout.setSpacing(0)  # 設置元件之間的間距為 0
+        date_custom_layout.addWidget(self.date_custom_radio)
+        date_custom_layout.addWidget(self.date_custom_input)
+
         date_layout = QtWidgets.QHBoxLayout()
         date_layout.addWidget(self.date_today_radio)
-        date_layout.addWidget(self.date_custom_radio)
-        date_layout.addWidget(self.date_custom_input)
+        date_layout.addLayout(date_custom_layout)
         date_widget = QtWidgets.QWidget()
         date_widget.setLayout(date_layout)
         custom_layout.addRow(QtWidgets.QLabel("測試日期:"), date_widget)
